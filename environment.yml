@@ -1,0 +1,15 @@
+name: mlops_project
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pandas>=2
+  - openpyxl
+  - pyyaml
+  - python-dotenv
+  - pytest
+  - pytest-cov
+  - black
+  - flake8
+  - pip
