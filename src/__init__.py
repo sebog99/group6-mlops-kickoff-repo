@@ -18,7 +18,7 @@ from .load_data import load_raw_data
 from .clean_data import load_raw, clean_data, save_df, validate_df
 
 # Feature engineering
-from .features import get_feature_preprocessor
+from .features import get_preprocessor
 
 # Model training
 from .train import train_model
@@ -27,7 +27,7 @@ from .train import train_model
 from .evaluate import evaluate_model
 
 # Inference
-from .infer import predict
+from .infer import run_inference
 
 __all__ = [
     # Loading
@@ -40,7 +40,7 @@ __all__ = [
     "validate_df",
 
     # Features
-    "get_feature_preprocessor",
+    "get_preprocessor",
 
     # Training
     "train_model",
@@ -49,7 +49,7 @@ __all__ = [
     "evaluate_model",
 
     # Inference
-    "predict",
+    "run_inference",
 ]
 
 __version__ = "0.1.0"
