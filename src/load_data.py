@@ -7,13 +7,11 @@ import pandas as pd
 import logging
 from pathlib import Path
 
-# Configuración de logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-
-def load_raw_data(raw_data_path: str) -> pd.DataFrame:
+def load_raw_data(raw_data_path: Path) -> pd.DataFrame:
     """
     Acquires data from external systems or local files.
     Why: Provides a single entry point for data ingestion.

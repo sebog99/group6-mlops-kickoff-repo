@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from src.validate import validate_dataframe
+from src.validate import validate_dataframe, DataValidationError
 
 
 def test_validate_dataframe_success():
@@ -15,7 +15,7 @@ def test_validate_dataframe_success():
 
 
 def test_validate_dataframe_empty():
-    """Verifica que un DataFrame vacío lance ValueError."""
+    """Verifica que un DataFrame vacío lance DataValidationError."""
     df = pd.DataFrame()
-    with pytest.raises(ValueError):
+    with pytest.raises(DataValidationError):
         validate_dataframe(df, required_columns=[])

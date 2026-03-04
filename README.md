@@ -1,9 +1,9 @@
-# [Project Name: Telco Customer Churn Prediction]
+# Project Name: Telco Customer Churn Prediction
 test_change
 other_branch_change
 
 **Author:** Group 6 
-**Course:** MLOps: Master in Business Analytics and Data Sciense
+**Course:** MLOps: Master in Business Analytics and Data Science
 **Status:** Session 1 (Initialization)
 
 ---
@@ -42,8 +42,6 @@ The target variable is Churn, which indicates whether a customer has discontinue
 * **Sensitive Info:** 
 The dataset does not contain direct personally identifiable information such as email addresses, credit card numbers, or national identification numbers. Although it includes a customerID field, this variable serves only as a unique identifier and is excluded from the modeling process. All raw data files are stored locally and excluded from version control to ensure compliance with good data governance practices.
 
-  > *⚠️ **WARNING:** If the dataset contains sensitive data, it must NEVER be committed to GitHub. Ensure `data/` is in your `.gitignore`.*
-
 ---
 
 ## 4. Repository Structure
@@ -80,6 +78,14 @@ This project follows a strict separation between "Sandbox" (Notebooks) and "Prod
 ├── reports/                 # Generated metrics, plots, and figures
 │
 └── tests/                   # Automated tests
+    ├── test_clean_data.py
+    ├── test_evaluate.py
+    ├── test_features.py
+    ├── test_infer.py
+    ├── test_load_data.py
+    ├── test_main.py
+    ├── test_train.py
+    └── test_validate.py
 ```
 
 ## 5. Execution Model

@@ -18,7 +18,6 @@ def trained_pipeline_and_data():
     df = pd.DataFrame(data)
     X = df.drop(columns=["Churn"])
     y = df["Churn"]
-
     preprocessor = get_preprocessor(X)
     pipeline = Pipeline(
         [("pre", preprocessor), ("model", LogisticRegression())])
@@ -29,8 +28,6 @@ def trained_pipeline_and_data():
 def test_evaluate_model(trained_pipeline_and_data):
     """Verifica que el modelo devuelva la métrica AUC correctamente."""
     model, X_test, y_test = trained_pipeline_and_data
-    score = evaluate_model(model, X_test, y_test,
-                           problem_type="classification")
-
+    score = evaluate_model(model, X_test, y_test, problem_type="classification")
     assert isinstance(score, float)
     assert 0.0 <= score <= 1.0

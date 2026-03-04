@@ -25,5 +25,5 @@ def test_engineer_features(clean_data):
 def test_get_preprocessor(clean_data):
     """Verifica que se devuelva el objeto ColumnTransformer."""
     df_eng = engineer_features(clean_data)
-    preprocessor = get_preprocessor(df_eng.drop(columns=["customerID"]))
+    preprocessor = get_preprocessor(df_eng)
     assert isinstance(preprocessor, ColumnTransformer)
