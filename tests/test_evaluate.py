@@ -9,7 +9,7 @@ from src.train import train_model
 
 
 # ---------------------------------------------------------
-# Regression Test,
+# Regression Test
 # ---------------------------------------------------------
 
 def test_evaluate_regression_returns_float():
