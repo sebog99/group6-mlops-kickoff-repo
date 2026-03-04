@@ -13,7 +13,7 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 
-# Configuration of logging to track the training process
+# Configuration  logging to track the training process
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
