@@ -1,71 +1,86 @@
 """
-Module: Model Training
-----------------------
-Role: Bundle preprocessing and algorithms into a single Pipeline and fit on training data.
-Input: pandas.DataFrame (Processed) + ColumnTransformer (Recipe).
-Output: Serialized scikit-learn Pipeline in `models/`.
+Module: train.py
+----------------
+Role: Trains a Logistic Regression model for Telco Churn prediction.
+Input: Training features (DataFrame), Target (Series), and a Preprocessor.
+Output: A fitted scikit-learn Pipeline saved in the 'models/' directory.
 """
 
-
-"""
-Educational Goal:
-- Why this module exists in an MLOps system: Isolates the training loop, enabling hyperparameter tuning runs without rerunning data prep.
-- Responsibility (separation of concerns): Fitting the combined Pipeline (preprocessor + model) to the training split.
-- Pipeline contract (inputs and outputs): Takes training data and an unfitted preprocessor, returns a fitted Pipeline.
-
-TODO: Replace print statements with standard library logging in a later session
-TODO: Any temporary or hardcoded variable or parameter will be imported from config.yml in a later session
-"""
-
-from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression, Ridge
+import os
+import logging
+import joblib
 import pandas as pd
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+
+# Configuration  logging to track the training process
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 
-def train_model(X_train: pd.DataFrame, y_train: pd.Series, preprocessor, problem_type: str):
+def train_model(X_train: pd.DataFrame, y_train: pd.Series, preprocessor, model_path: str = "models/model.joblib"):
     """
-    Inputs:
-    - X_train: Training features DataFrame.
-    - y_train: Training target Series.
-    - preprocessor: The unfitted ColumnTransformer recipe.
-    - problem_type: "classification" or "regression".
-    Outputs:
-    - A fully fitted scikit-learn Pipeline.
-    Why this contract matters for reliable ML delivery:
-    - Bundling the preprocessor and estimator into one Pipeline guarantees that inference data undergoes the exact same transformations as training data.
+    Fits a machine learning pipeline and saves the resulting artifact.
+
+    Why a Pipeline? 
+    It encapsulates the preprocessing steps and the estimator into a single object. 
+    This prevents 'data leakage' during training and ensures that inference data 
+    undergoes the exact same transformations[cite: 5, 30].
+
+    Args:
+        X_train (pd.DataFrame): Training features.
+        y_train (pd.Series): Training target (Churn).
+        preprocessor: An unfitted scikit-learn ColumnTransformer.
+        model_path (str): File path to save the trained model.
+
+    Returns:
+        Pipeline: The fully fitted scikit-learn Pipeline.
     """
-    print("Executing train_model")  # TODO: replace with logging later
 
-    if problem_type == "classification":
-        estimator = LogisticRegression(max_iter=500)
-    else:
-        estimator = Ridge()
+    logging.info("Initializing the ML Pipeline...")
 
-    # --------------------------------------------------------
-    # START STUDENT CODE
-    # --------------------------------------------------------
-    # TODO_STUDENT: Paste your notebook logic here to replace or extend the baseline
-    # Why: You will want to experiment with different algorithms (RandomForest, XGBoost) and hyperparameters.
-    # Examples:
-    # 1. estimator = RandomForestClassifier(n_estimators=100, max_depth=5)
-    # 2. estimator = xgb.XGBRegressor(learning_rate=0.01)
-    #
-    # Optional forcing function (leave commented)
-    # raise NotImplementedError("Student: You must implement this logic to proceed!")
-    #
-    # Placeholder (Remove this after implementing your code):
-    print("Warning: Student has not implemented this section yet")
-    # --------------------------------------------------------
-    # END STUDENT CODE
-    # --------------------------------------------------------
+    # Parameters derived from the 'New Final.ipynb' experiment
+    # max_iter=2000 is used to ensure convergence on the scaled Telco dataset.
+    estimator = LogisticRegression(max_iter=2000, random_state=42)
 
+    # Creating the pipeline
     pipeline = Pipeline([
         ("preprocess", preprocessor),
         ("model", estimator)
     ])
 
-    # TODO: replace with logging later
-    print("Fitting pipeline on training data...")
-    pipeline.fit(X_train, y_train)
+    try:
+        logging.info("Fitting the model on the training data...")
+        pipeline.fit(X_train, y_train)
+        logging.info("Model training completed successfully.")
+
+        # Ensure the output directory exists [cite: 50]
+        os.makedirs(os.path.dirname(model_path), exist_ok=True)
+
+        # Artifacting: Saving the model for production use
+        joblib.dump(pipeline, model_path)
+        logging.info(f"Model artifact saved at: {model_path}")
+
+    except Exception as e:
+        # Comprehensive error handling [cite: 10, 50]
+        logging.error(f"An error occurred during training or saving: {e}")
+        raise e
 
     return pipeline
+
+
+def load_trained_model(model_path: str = "models/model.joblib"):
+    """
+    Loads a serialized model artifact.
+
+    Why: Essential for the inference.py module to apply the model to new data[cite: 25].
+    """
+    try:
+        model = joblib.load(model_path)
+        logging.info(f"Model loaded successfully from {model_path}")
+        return model
+    except FileNotFoundError:
+        logging.error(f"Model file not found at {model_path}")
+        raise
