@@ -1,54 +1,78 @@
 """
-Module: Inference
------------------
-Role: Make predictions on new, unseen data.
-Input: Trained Model + New Data.
-Output: Predictions (Array or DataFrame).
+Module: infer.py
+----------------
+Role: Generate predictions and risk probabilities on new data using a fitted model.
+Input: Fitted scikit-learn Pipeline + Processed features DataFrame.
+Output: pandas.DataFrame with class predictions and churn probabilities.
 """
 
-"""
-Educational Goal:
-- Why this module exists in an MLOps system: Defines how the model generates predictions on new, unseen data in production.
-- Responsibility (separation of concerns): Loading the model and formatting the output predictions.
-- Pipeline contract (inputs and outputs): Takes a fitted model and new data, returns a DataFrame containing only predictions.
-
-TODO: Replace print statements with standard library logging in a later session
-TODO: Any temporary or hardcoded variable or parameter will be imported from config.yml in a later session
-"""
-
-
+import logging
 import pandas as pd
+import numpy as np
+
+# Configuration of logging for production traceability
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+
 def run_inference(model, X_infer: pd.DataFrame) -> pd.DataFrame:
     """
-    Inputs:
-    - model: The fitted scikit-learn Pipeline.
-    - X_infer: DataFrame containing new features to predict on.
-    Outputs:
-    - pd.DataFrame with a single column "prediction" matching the input index.
-    Why this contract matters for reliable ML delivery:
-    - Maintaining the original index ensures predictions can be accurately joined back to business records (like user IDs).
+    Generates predictions and risk scores for unseen data.
+
+    Why this design? 
+    1. Index Preservation: We maintain the original DataFrame index so 
+       predictions can be joined back to customer IDs in the database.
+    2. Probability Output: Providing a 'Churn_Probability' allows business 
+       teams to rank customers by risk rather than using a rigid 0.5 cutoff.
+
+    Args:
+        model: The fitted scikit-learn Pipeline (preprocessor + estimator).
+        X_infer (pd.DataFrame): Preprocessed features to predict on.
+
+    Returns:
+        pd.DataFrame: Contains "prediction" (0/1) and "churn_probability" (0.0-1.0).
     """
-    print("Executing run_inference")  # TODO: replace with logging later
+    logging.info(f"Starting inference on {len(X_infer)} records...")
 
-    predictions = model.predict(X_infer)
+    try:
+        # 1. Generate class predictions (Yes/No)
+        # Uses the default scikit-learn threshold of 0.5
+        predictions = model.predict(X_infer)
 
-    # --------------------------------------------------------
-    # START STUDENT CODE
-    # --------------------------------------------------------
-    # TODO_STUDENT: Paste your notebook logic here to replace or extend the baseline
-    # Why: You might need to return probabilities instead of labels, or map predictions to business logic (e.g., 1="Approve", 0="Deny").
-    # Examples:
-    # 1. probs = model.predict_proba(X_infer)[:, 1]
-    # 2. preds = ["High Risk" if p == 1 else "Low Risk" for p in predictions]
-    #
-    # Optional forcing function (leave commented)
-    # raise NotImplementedError("Student: You must implement this logic to proceed!")
-    #
-    # Placeholder (Remove this after implementing your code):
-    print("Warning: Student has not implemented this section yet")
-    # --------------------------------------------------------
-    # END STUDENT CODE
-    # --------------------------------------------------------
+        # 2. Generate churn probabilities (Business Risk Score)
+        # predict_proba returns [prob_no, prob_yes]. We take index 1 for 'Yes'.
+        probabilities = model.predict_proba(X_infer)[:, 1]
 
-    result_df = pd.DataFrame({"prediction": predictions}, index=X_infer.index)
+        logging.info("Inference completed successfully.")
+
+        # 3. Consolidate results into a structured DataFrame
+        result_df = pd.DataFrame({
+            "prediction": predictions,
+            "churn_probability": np.round(probabilities, 4)
+        }, index=X_infer.index)
+
+        return result_df
+
+    except AttributeError as e:
+        logging.error(
+            "The provided model does not support probability predictions.")
+        raise e
+    except Exception as e:
+        logging.error(f"An unexpected error occurred during inference: {e}")
+        raise e
+
+
+def interpret_results(result_df: pd.DataFrame, threshold: float = 0.7):
+    """
+    Higher-level business logic to tag 'High Risk' customers.
+
+    Why: MLOps is about business value. This helper allows teams to 
+    set a custom risk threshold (e.g., > 70%) for marketing campaigns.
+    """
+    result_df['risk_level'] = [
+        "High Risk" if p >= threshold else "Standard"
+        for p in result_df['churn_probability']
+    ]
     return result_df
