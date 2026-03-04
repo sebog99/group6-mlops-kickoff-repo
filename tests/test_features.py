@@ -1,3 +1,5 @@
+# python -m pytest tests/test_features.py
+
 import pytest
 import pandas as pd
 import numpy as np
