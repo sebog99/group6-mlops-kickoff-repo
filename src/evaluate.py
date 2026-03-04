@@ -1,5 +1,5 @@
 """
-Module: Evaluation
+Module: Evaluation.
 ------------------
 Role: Generate metrics and plots for model performance.
 """
