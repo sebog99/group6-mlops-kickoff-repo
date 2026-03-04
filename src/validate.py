@@ -1,63 +1,88 @@
 """
-Module: Data Validation
------------------------
-Role: Check data quality (schema, types, ranges) before training.
+Module: validate.py
+-------------------
+Role: Quality gate to ensure data schema, types, and ranges are compliant before training.
 Input: pandas.DataFrame.
-Output: Boolean (True if valid) or raises Error.
+Output: True if valid, or raises DataValidationError.
 """
 
-
-"""
-Educational Goal:
-- Why this module exists in an MLOps system: Acts as a quality gate to prevent bad data from silently ruining models.
-- Responsibility (separation of concerns): Fails fast if data expectations (schema, nulls, ranges) are violated.
-- Pipeline contract (inputs and outputs): Takes a DataFrame and required schema, returns a boolean or raises an Exception.
-
-TODO: Replace print statements with standard library logging in a later session
-TODO: Any temporary or hardcoded variable or parameter will be imported from config.yml in a later session
-"""
-
-
+import logging
 import pandas as pd
+
+# Logging configuration for industrial traceability [cite: 50]
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+
+class DataValidationError(Exception):
+    """Custom exception for data validation errors[cite: 54]."""
+    pass
+
+
 def validate_dataframe(df: pd.DataFrame, required_columns: list) -> bool:
     """
+    Validates the schema and integrity of the Telco Churn data.
+
+    Why: Acts as a "fail-fast" mechanism to prevent corrupted data from 
+    reaching the training phase and generating unreliable models[cite: 21, 50].
+
     Inputs:
-    - df: The DataFrame to validate.
-    - required_columns: List of string column names that must exist in the DataFrame.
+    - df: DataFrame to be validated.
+    - required_columns: List of mandatory columns.
+
     Outputs:
-    - True if validation passes, otherwise raises ValueError.
-    Why this contract matters for reliable ML delivery:
-    - Catches schema drift or data corruption immediately, rather than failing deep inside the training loop.
+    - True if validation passes, otherwise raises DataValidationError.
     """
-    print("Executing validate_dataframe")  # TODO: replace with logging later
+    logger.info("Executing DataFrame validation...")
 
+    # 1. Empty DataFrame check [cite: 50]
     if df.empty:
-        raise ValueError(
-            "Validation Failed: The DataFrame is completely empty!")
+        logger.error("Validation failed: The DataFrame is completely empty.")
+        raise DataValidationError("The input DataFrame contains no data.")
 
-    for col in required_columns:
-        if col not in df.columns:
-            raise ValueError(
-                f"Validation Failed: Required column '{col}' is missing from the dataset.")
+    # 2. Schema verification (mandatory columns) [cite: 21, 50]
+    missing_cols = [col for col in required_columns if col not in df.columns]
+    if missing_cols:
+        logger.error(
+            f"Validation failed: Mandatory columns are missing: {missing_cols}")
+        raise DataValidationError(f"Missing columns: {missing_cols}")
 
     # --------------------------------------------------------
-    # START STUDENT CODE
+    # PROJECT-SPECIFIC LOGIC (Based on New Final.ipynb)
     # --------------------------------------------------------
-    # TODO_STUDENT: Paste your notebook logic here to replace or extend the baseline
-    # Why: You might need to check for specific data types, value ranges, or allowed categories.
-    # Examples:
-    # 1. assert df['age'].min() >= 0, "Age cannot be negative"
-    # 2. assert df['status'].isin(['active', 'inactive']).all()
-    #
-    # Optional forcing function (leave commented)
-    # raise NotImplementedError("Student: You must implement this logic to proceed!")
-    #
-    # Placeholder (Remove this after implementing your code):
-    print("Warning: Student has not implemented this section yet")
-    # --------------------------------------------------------
-    # END STUDENT CODE
-    # --------------------------------------------------------
+    try:
+        # 3. Critical data type validation
+        # 'MonthlyCharges' must be numeric for proper scaling
+        if not pd.api.types.is_numeric_dtype(df['MonthlyCharges']):
+            raise DataValidationError(
+                "The 'MonthlyCharges' column must be numeric.")
 
-    # TODO: replace with logging later
-    print("Validation passed successfully.")
-    return True
+        # 'tenure' must be numeric and have no negative values
+        if not pd.api.types.is_numeric_dtype(df['tenure']):
+            raise DataValidationError("The 'tenure' column must be numeric.")
+        if (df['tenure'] < 0).any():
+            raise DataValidationError(
+                "Negative values detected in the 'tenure' column.")
+
+        # 'SeniorCitizen' must be numeric (typically 0 or 1)
+        if not pd.api.types.is_numeric_dtype(df['SeniorCitizen']):
+            raise DataValidationError(
+                "The 'SeniorCitizen' column must be numeric.")
+
+        # 4. Target column check (Churn)
+        if df['Churn'].isnull().any():
+            logger.warning(
+                "Null values detected in the target column 'Churn'.")
+
+        logger.info("Validation completed successfully. Data is compliant.")
+        return True
+
+    except DataValidationError as e:
+        logger.error(f"Validation Error: {e}")
+        raise e
+    except Exception as e:
+        logger.error(f"An unexpected error occurred during validation: {e}")
+        raise e
