@@ -1,83 +1,91 @@
 """
-Module: Feature Engineering
----------------------------
-Role: Define the transformation "recipe" (binning, encoding, scaling) to be bundled with the model.
-Input: Configuration (lists of column names).
-Output: scikit-learn ColumnTransformer object.
+Module: features.py
+-------------------
+Role: Create, select, and define the transformation logic for engineered features.
+Input: Cleaned pandas.DataFrame.
+Output: A scikit-learn ColumnTransformer object (the "recipe") and the engineered DataFrame.
 """
 
-
-"""
-Educational Goal:
-- Why this module exists in an MLOps system: Encapsulates feature transformations so they can be bundled with the model.
-- Responsibility (separation of concerns): Defining the exact mathematical transformations applied to input features.
-- Pipeline contract (inputs and outputs): Returns an unfitted scikit-learn ColumnTransformer. Does NOT accept data.
-
-TODO: Replace print statements with standard library logging in a later session
-TODO: Any temporary or hardcoded variable or parameter will be imported from config.yml in a later session
-"""
-
+import logging
+import pandas as pd
+import numpy as np
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, KBinsDiscretizer
-from typing import Optional, List
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
+# Configuration of logging [cite: 14, 38]
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 
-def get_feature_preprocessor(quantile_bin_cols: Optional[List[str]] = None,
-                             categorical_onehot_cols: Optional[List[str]] = None,
-                             numeric_passthrough_cols: Optional[List[str]] = None,
-                             n_bins: int = 3):
+def engineer_features(df: pd.DataFrame):
     """
-    Inputs:
-    - quantile_bin_cols: List of numeric column names to discretize.
-    - categorical_onehot_cols: List of categorical column names to one-hot encode.
-    - numeric_passthrough_cols: List of numeric column names to pass through unchanged.
-    - n_bins: Integer number of bins for the discretizer.
-    Outputs:
-    - An unfitted scikit-learn ColumnTransformer object.
-    Why this contract matters for reliable ML delivery:
-    - Returning a recipe (transformer) rather than transformed data prevents data leakage and ensures train/infer use identical logic.
+    Apply domain-specific feature engineering.
+
+    Why: Transforms raw data into a format that highlights underlying patterns 
+    for the Logistic Regression model.
     """
-    print("Executing get_feature_preprocessor to build transformation recipe")  # TODO: replace with logging later
-
-    quantile_bin_cols = quantile_bin_cols or []
-    categorical_onehot_cols = categorical_onehot_cols or []
-    numeric_passthrough_cols = numeric_passthrough_cols or []
-
-    # Handle older scikit-learn versions gracefully
     try:
-        ohe = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
-    except TypeError:
-        ohe = OneHotEncoder(sparse=False, handle_unknown='ignore')
+        logging.info("Starting feature engineering...")
+        df_eng = df.copy()
 
-    transformers = []
+        # 1. Feature Selection: Drop non-predictive identifiers
+        if 'customerID' in df_eng.columns:
+            df_eng = df_eng.drop(columns=['customerID'])
+            logging.info("Dropped 'customerID'.")
 
-    if quantile_bin_cols:
-        transformers.append(("q_bin", KBinsDiscretizer(
-            n_bins=n_bins, encode='ordinal', strategy='quantile'), quantile_bin_cols))
+        # 2. Specific Logic: Ensure TotalCharges is numeric (if not handled in cleaner)
+        # Why: TotalCharges often arrives as 'object' due to empty strings
+        if 'TotalCharges' in df_eng.columns:
+            df_eng['TotalCharges'] = pd.to_numeric(
+                df_eng['TotalCharges'], errors='coerce')
+            df_eng['TotalCharges'] = df_eng['TotalCharges'].fillna(0)
 
-    if categorical_onehot_cols:
-        transformers.append(("cat_ohe", ohe, categorical_onehot_cols))
+        logging.info("Feature engineering completed.")
+        return df_eng
 
-    if numeric_passthrough_cols:
-        transformers.append(
-            ("num_pass", "passthrough", numeric_passthrough_cols))
+    except Exception as e:
+        logging.error(f"Error in engineering features: {e}")
+        raise e
 
-    # --------------------------------------------------------
-    # START STUDENT CODE
-    # --------------------------------------------------------
-    # TODO_STUDENT: Paste your notebook logic here to replace or extend the baseline
-    # Why: Different domains require different feature engineering (e.g., text TF-IDF, standard scaling, polynomial features).
-    # Examples:
-    # 1. transformers.append(("scaler", StandardScaler(), numeric_cols))
-    # 2. transformers.append(("tfidf", TfidfVectorizer(), text_col))
-    #
-    # Optional forcing function (leave commented)
-    # raise NotImplementedError("Student: You must implement this logic to proceed!")
-    #
-    # Placeholder (Remove this after implementing your code):
-    print("Warning: Student has not implemented this section yet")
-    # --------------------------------------------------------
-    # END STUDENT CODE
-    # --------------------------------------------------------
 
-    return ColumnTransformer(transformers=transformers, remainder="drop")
+def get_preprocessor(X: pd.DataFrame):
+    """
+    Defines the ColumnTransformer (The 'Recipe').
+
+    Why Industry Grade? 
+    Using a ColumnTransformer instead of pd.get_dummies prevents 'data leakage' 
+    and ensures consistency between training and inference phases.
+    """
+    try:
+        logging.info("Defining the preprocessor (ColumnTransformer)...")
+
+        # Identify column types based on your notebook experiment
+        numeric_features = ['tenure', 'MonthlyCharges', 'TotalCharges']
+        categorical_features = [
+            col for col in X.columns
+            if col not in numeric_features and X[col].dtype == 'object'
+        ]
+
+        # Numeric: Scaling is essential for Logistic Regression convergence
+        numeric_transformer = StandardScaler()
+
+        # Categorical: One-Hot Encoding for non-numeric features
+        categorical_transformer = OneHotEncoder(
+            handle_unknown='ignore', drop='first')
+
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ('num', numeric_transformer, numeric_features),
+                ('cat', categorical_transformer, categorical_features)
+            ]
+        )
+
+        logging.info(
+            f"Preprocessor defined with {len(numeric_features)} numeric and {len(categorical_features)} categorical steps.")
+        return preprocessor
+
+    except Exception as e:
+        logging.error(f"Error defining preprocessor: {e}")
+        raise e
