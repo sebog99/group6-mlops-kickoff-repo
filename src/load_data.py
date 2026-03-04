@@ -18,7 +18,6 @@ TODO: Any temporary or hardcoded variable or parameter will be imported from con
 """
 
 from pathlib import Path
-from src.load_data import load_raw_data
 import pandas as pd
 
 
@@ -35,9 +34,9 @@ def load_raw_data(raw_data_path: Path) -> pd.DataFrame:
     # --------------------------------------------------------
     # START STUDENT CODE
     # --------------------------------------------------------
-    load_csv = pd.read_csv("../data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv")
+    df = pd.read_csv(raw_data_path)
     # --------------------------------------------------------
     # END STUDENT CODE
     # --------------------------------------------------------
 
-    return load_csv(raw_data_path)
+    return df
