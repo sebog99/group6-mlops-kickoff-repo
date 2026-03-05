@@ -4,7 +4,7 @@ other_branch_change
 
 **Author:** Group 6 
 **Course:** MLOps: Master in Business Analytics and Data Science
-**Status:** Session 1 (Initialization)
+**Status:** Orchestration
 
 ---
 
@@ -50,49 +50,51 @@ This project follows a strict separation between "Sandbox" (Notebooks) and "Prod
 
 ```text
 .
-├── README.md                # This file (Project definition)
-├── environment.yml          # Dependencies (Conda/Pip)
-├── config.yaml              # Global configuration (paths, params)
-├── .env                     # Secrets placeholder
-│
-├── notebooks/               # Experimental sandbox
-│   └── yourbaseline.ipynb   # From previous work
-│
-├── src/                     # Production code (The "Factory")
-│   ├── __init__.py          # Python package
-│   ├── load_data.py         # Ingest raw data
-│   ├── clean_data.py        # Preprocessing & cleaning
-│   ├── features.py          # Feature engineering
-│   ├── validate.py          # Data quality checks
-│   ├── train.py             # Model training & saving
-│   ├── evaluate.py          # Metrics & plotting
-│   ├── infer.py             # Inference logic
-│   └── main.py              # Pipeline orchestrator
-│
-├── data/                    # Local storage (IGNORED by Git)
-│   ├── raw/                 # Immutable input data
-│   └── processed/           # Cleaned data ready for training
-│
-├── models/                  # Serialized artifacts (IGNORED by Git)
-│
-├── reports/                 # Generated metrics, plots, and figures
-│
-└── tests/                   # Automated tests
-    ├── test_clean_data.py
-    ├── test_evaluate.py
-    ├── test_features.py
-    ├── test_infer.py
-    ├── test_load_data.py
-    ├── test_main.py
-    ├── test_train.py
-    └── test_validate.py
+├── README.md                 # Project overview and documentation
+├── environment.yml           # Conda environment dependencies
+├── config.yaml               # Global configuration (paths, parameters)
+
+├── notebooks/                # Experimental and exploratory work
+│   └── New Final.ipynb       # Notebook from previous analysis
+
+├── src/                      # Production-ready source code (pipeline modules)
+│   ├── __init__.py           # Makes src a Python package
+│   ├── load_data.py          # Data ingestion from raw sources
+│   ├── clean_data.py         # Data preprocessing and cleaning
+│   ├── features.py           # Feature engineering logic
+│   ├── validate.py           # Data validation and quality checks
+│   ├── train.py              # Model training and model persistence
+│   ├── evaluate.py           # Model evaluation and metrics generation
+│   ├── infer.py              # Inference logic for new/unseen data
+│   └── main.py               # Pipeline orchestrator (entry point)
+
+├── data/                     # Data storage (not tracked if large)
+│   ├── raw/                  # Original, immutable raw data
+│   ├── processed/            # Cleaned and transformed datasets
+│   └── inference/            # Data used for prediction/inference
+
+├── models/                   # Serialized trained models (ignored by Git)
+
+├── reports/                  # Generated reports, metrics, and visualizations
+
+└── tests/                    # Automated unit tests
+    ├── test_clean_data.py    # Tests for preprocessing module
+    ├── test_evaluate.py      # Tests for evaluation module
+    ├── test_features.py      # Tests for feature engineering
+    ├── test_infer.py         # Tests for inference logic
+    ├── test_load_data.py     # Tests for data loading
+    ├── test_main.py          # Tests for pipeline orchestration
+    ├── test_train.py         # Tests for training module
+    └── test_validate.py      # Tests for validation checks
 ```
 
 ## 5. Execution Model
-
-The full machine learning pipeline will eventually be executable through:
-
-`python -m src.main`
+ 
+Build and activate the Conda environment:
+```
+conda env create -f environment.yml
+conda activate mlops-modul
+```
 
 
 
