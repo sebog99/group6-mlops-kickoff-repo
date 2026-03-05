@@ -24,7 +24,7 @@ The primary users of the model’s output are marketing and customer retention t
 From a business perspective, the project will be considered successful if it contributes to a measurable reduction in customer churn and supports improved retention performance. The ultimate objective is to decrease churn-related revenue loss and enhance customer lifetime value. Precise financial targets will be defined in alignment with business stakeholders.
 
 * **Technical Metric (The "How"):**
-From a technical perspective, the primary evaluation metric is the Area Under the Receiver Operating Characteristic Curve (AUC-ROC), which measures the model’s ability to discriminate between churners and non-churners across different thresholds. The baseline implementation achieves an AUC of approximately 0.839 and an accuracy of approximately 0.795. Additional evaluation metrics include precision and recall to ensure balanced performance.
+From a technical perspective, the primary evaluation metric is the Area Under the Receiver Operating Characteristic Curve >(AUC-ROC), which measures the model’s ability to discriminate between churners and non-churners across different thresholds. The baseline implementation achieves an> AUC of approximately 0.839 and an accuracy of approximately 0.795. Additional evaluation metrics include precision and recall to ensure balanced performance.
 
 * **Acceptance Criteria:**
 The model will be accepted if it demonstrates performance superior to a random classifier and outperforms a simple baseline approach such as majority class prediction. In addition, the training and evaluation process must be fully reproducible through the production pipeline implemented in the src/ directory.
@@ -90,11 +90,69 @@ This project follows a strict separation between "Sandbox" (Notebooks) and "Prod
 
 ## 5. Execution Model
  
+### Step 1: Environment Setup
 Build and activate the Conda environment:
 ```
 conda env create -f environment.yml
 conda activate mlops-modul
 ```
 
+### Step 2: Exploratory Sandbox (The Laboratory)
+The notebooks/New Final.ipynb file represents the experimental baseline implementation of the project. In this notebook, the full analytical workflow was developed and validated before modularization.
 
+The baseline model achieved:
+-> AUC ≈ 0.839
+-> Accuracy ≈ 0.795
+-> Precision ≈ 0.637
+-> Recall ≈ 0.535
 
+These results confirm strong discriminative performance and provide a benchmark for the production pipeline.
+
+The notebook serves as a sandbox for experimentation and debugging. However, it is not the production execution entry point.
+
+### Step 3: Run the Test Suite
+
+Before executing the full pipeline, the integrity of the codebase must be verified through automated testing. The test suite ensures that:
+-> Data cleaning behaves deterministically
+-> Feature engineering does not introduce leakage
+-> Model training and evaluation functions respect contract boundaries
+-> The orchestrator runs without silent failures
+
+Run the tests with:
+```
+pytest tests/ -v
+```
+A fully passing test suite confirms that module contracts are respected and the pipeline is stable.
+
+### Step 4: Execute the Orchestrator
+
+The complete machine learning pipeline is executed via the orchestrator located in src/main.py.
+
+Run the pipeline using:
+```
+python -m src.main
+```
+This ensures deterministic, reproducible execution and prevents training-serving skew.
+
+## 6. Outputs Generated
+
+Upon execution of the orchestrator, the following artifacts are produced:
+
+1. data/processed/clean.csv — The deterministically cleaned dataset
+2. models/model.joblib — The serialized preprocessing and model pipeline
+3. reports/metrics.json or equivalent — Performance metrics and evaluation outputs
+4. reports/predictions.csv — Model predictions and churn probabilities
+
+These artifacts ensure reproducibility, traceability, and auditability.
+
+## 7. Academic Purpose
+
+This repository serves as a practical implementation of Machine Learning Operations (MLOps) principles. The objective is to transition from a monolithic Jupyter Notebook into a modular, testable, and production-oriented architecture.
+
+**Learning Outcomes:**
+-> Translate exploratory analysis into modular production code
+-> Enforce separation of concerns across pipeline stages
+-> Prevent data leakage through structured split boundaries
+-> Validate data quality before model training
+-> Produce reproducible artifacts
+-> Implement automated tests for behavioral validation
