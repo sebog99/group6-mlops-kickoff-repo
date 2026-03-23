@@ -17,6 +17,7 @@ Pipeline steps:
 import os
 import logging
 from pathlib import Path
+import yaml
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -42,6 +43,15 @@ logger = logging.getLogger(__name__)
 
 
 # -----------------------------------------------------
+# Config loader
+# -----------------------------------------------------
+
+def load_config(config_path: str = "config.yaml") -> dict:
+    with open(config_path, "r") as f:
+        return yaml.safe_load(f)
+
+
+# -----------------------------------------------------
 # Main Pipeline
 # -----------------------------------------------------
 
@@ -49,11 +59,27 @@ def main():
 
     logger.info("Starting ML pipeline...")
 
+    # Load configuration
+    cfg = load_config()
+
     # Paths
-    raw_path = Path("data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv")
-    clean_path = Path("data/processed/clean.csv")
-    model_path = Path("models/model.joblib")
-    preds_path = Path("reports/predictions.csv")
+    raw_path = Path(cfg["data"]["raw"])
+    clean_path = Path(cfg["data"]["processed"])
+    model_path = Path(cfg["data"]["model"])
+    preds_path = Path(cfg["data"]["predictions"])
+
+    # Preprocessing config
+    drop_na = cfg["preprocessing"]["drop_na"]
+    required_columns = cfg["preprocessing"]["required_columns"]
+
+    # Train config
+    test_size = cfg["train"]["test_size"]
+    seed = cfg["train"]["seed"]
+    problem_type = cfg["train"]["problem_type"]
+
+    # Model hyperparameters
+    max_iter = cfg["model"]["max_iter"]
+    random_state = cfg["model"]["random_state"]
 
     # Ensure folders exist
     for p in [clean_path, model_path, preds_path]:
@@ -71,7 +97,7 @@ def main():
     # -------------------------------------------------
 
     logger.info("STEP 2: Cleaning data")
-    df_clean = clean_data(df_raw, drop_na=True)
+    df_clean = clean_data(df_raw, drop_na=drop_na)
 
     df_clean.to_csv(clean_path, index=False)
     logger.info(f"Clean dataset saved to {clean_path}")
@@ -81,15 +107,6 @@ def main():
     # -------------------------------------------------
 
     logger.info("STEP 3: Validating dataset")
-
-    required_columns = [
-        "customerID",
-        "tenure",
-        "MonthlyCharges",
-        "TotalCharges",
-        "Churn"
-    ]
-
     validate_dataframe(df_clean, required_columns)
 
     # -------------------------------------------------
@@ -112,8 +129,8 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
-        test_size=0.30,
-        random_state=42
+        test_size=test_size,
+        random_state=seed
     )
 
     # -------------------------------------------------
@@ -134,7 +151,9 @@ def main():
         X_train,
         y_train,
         preprocessor,
-        model_path=str(model_path)
+        model_path=str(model_path),
+        max_iter=max_iter,
+        random_state=random_state
     )
 
     # -------------------------------------------------
@@ -147,7 +166,7 @@ def main():
         pipeline,
         X_test,
         y_test,
-        problem_type="classification"
+        problem_type=problem_type
     )
 
     logger.info(f"Evaluation metric value: {metric_value:.4f}")

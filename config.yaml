@@ -1,10 +1,26 @@
 # MLOps Project Configuration
-# This file will eventually control paths, hyperparameters, and toggles.
+# Controls paths, hyperparameters, and pipeline toggles.
 
 data:
-  raw: "data/raw/dataset.csv"
+  raw: "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
   processed: "data/processed/clean.csv"
+  model: "models/model.joblib"
+  predictions: "reports/predictions.csv"
+
+preprocessing:
+  drop_na: true
+  required_columns:
+    - "customerID"
+    - "tenure"
+    - "MonthlyCharges"
+    - "TotalCharges"
+    - "Churn"
 
 train:
-  test_size: 0.2
+  test_size: 0.30
   seed: 42
+  problem_type: "classification"
+
+model:
+  max_iter: 2000
+  random_state: 42
