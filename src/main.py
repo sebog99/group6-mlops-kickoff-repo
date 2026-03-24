@@ -28,16 +28,7 @@ from src.features import engineer_features, get_preprocessor
 from src.train import train_model
 from src.evaluate import evaluate_model
 from src.infer import run_inference
-
-
-# -----------------------------------------------------
-# Logging configuration
-# -----------------------------------------------------
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+from src.logger import configure_logging
 
 logger = logging.getLogger(__name__)
 
@@ -55,31 +46,41 @@ def load_config(config_path: str = "config.yaml") -> dict:
 # Main Pipeline
 # -----------------------------------------------------
 
-def main():
-
-    logger.info("Starting ML pipeline...")
+def main() -> None:
 
     # Load configuration
     cfg = load_config()
 
+    # Configure logging first
+    configure_logging(
+        log_level=cfg["logging"]["level"],
+        log_file=Path(cfg["paths"]["log_file"]),
+    )
+
+    logger.info("Starting ML pipeline...")
+
     # Paths
-    raw_path = Path(cfg["data"]["raw"])
-    clean_path = Path(cfg["data"]["processed"])
-    model_path = Path(cfg["data"]["model"])
-    preds_path = Path(cfg["data"]["predictions"])
+    raw_path = Path(cfg["paths"]["raw_data"])
+    clean_path = Path(cfg["paths"]["processed_data"])
+    model_path = Path(cfg["paths"]["model_artifact"])
+    preds_path = Path(cfg["paths"]["predictions_artifact"])
 
-    # Preprocessing config
-    drop_na = cfg["preprocessing"]["drop_na"]
-    required_columns = cfg["preprocessing"]["required_columns"]
+    # Validation config
+    drop_na = cfg["validation"]["drop_na"]
+    required_columns = cfg["validation"]["required_columns"]
 
-    # Train config
-    test_size = cfg["train"]["test_size"]
-    seed = cfg["train"]["seed"]
-    problem_type = cfg["train"]["problem_type"]
+    # Problem config
+    target_column = cfg["problem"]["target_column"]
+    problem_type = cfg["problem"]["problem_type"]
+    identifier_column = cfg["problem"]["identifier_column"]
+
+    # Split config
+    test_size = cfg["split"]["test_size"]
+    random_state = cfg["split"]["random_state"]
 
     # Model hyperparameters
-    max_iter = cfg["model"]["max_iter"]
-    random_state = cfg["model"]["random_state"]
+    max_iter = cfg["training"]["classification"]["max_iter"]
+    model_random_state = cfg["training"]["classification"]["random_state"]
 
     # Ensure folders exist
     for p in [clean_path, model_path, preds_path]:
@@ -117,8 +118,8 @@ def main():
 
     df_eng = engineer_features(df_clean)
 
-    X = df_eng.drop(columns=["Churn"])
-    y = df_eng["Churn"].map({"No": 0, "Yes": 1})
+    X = df_eng.drop(columns=[target_column])
+    y = df_eng[target_column].map({"No": 0, "Yes": 1})
 
     # -------------------------------------------------
     # STEP 5: Train/Test Split
@@ -130,7 +131,7 @@ def main():
         X,
         y,
         test_size=test_size,
-        random_state=seed
+        random_state=random_state
     )
 
     # -------------------------------------------------
@@ -153,7 +154,7 @@ def main():
         preprocessor,
         model_path=str(model_path),
         max_iter=max_iter,
-        random_state=random_state
+        random_state=model_random_state
     )
 
     # -------------------------------------------------
