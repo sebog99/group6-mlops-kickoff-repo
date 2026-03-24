@@ -17,6 +17,7 @@ Pipeline steps:
 import os
 import logging
 from pathlib import Path
+import yaml
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -27,33 +28,59 @@ from src.features import engineer_features, get_preprocessor
 from src.train import train_model
 from src.evaluate import evaluate_model
 from src.infer import run_inference
-
-
-# -----------------------------------------------------
-# Logging configuration
-# -----------------------------------------------------
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+from src.logger import configure_logging
 
 logger = logging.getLogger(__name__)
+
+
+# -----------------------------------------------------
+# Config loader
+# -----------------------------------------------------
+
+def load_config(config_path: str = "config.yaml") -> dict:
+    with open(config_path, "r") as f:
+        return yaml.safe_load(f)
 
 
 # -----------------------------------------------------
 # Main Pipeline
 # -----------------------------------------------------
 
-def main():
+def main() -> None:
+
+    # Load configuration
+    cfg = load_config()
+
+    # Configure logging first
+    configure_logging(
+        log_level=cfg["logging"]["level"],
+        log_file=Path(cfg["paths"]["log_file"]),
+    )
 
     logger.info("Starting ML pipeline...")
 
     # Paths
-    raw_path = Path("data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv")
-    clean_path = Path("data/processed/clean.csv")
-    model_path = Path("models/model.joblib")
-    preds_path = Path("reports/predictions.csv")
+    raw_path = Path(cfg["paths"]["raw_data"])
+    clean_path = Path(cfg["paths"]["processed_data"])
+    model_path = Path(cfg["paths"]["model_artifact"])
+    preds_path = Path(cfg["paths"]["predictions_artifact"])
+
+    # Validation config
+    drop_na = cfg["validation"]["drop_na"]
+    required_columns = cfg["validation"]["required_columns"]
+
+    # Problem config
+    target_column = cfg["problem"]["target_column"]
+    problem_type = cfg["problem"]["problem_type"]
+    identifier_column = cfg["problem"]["identifier_column"]
+
+    # Split config
+    test_size = cfg["split"]["test_size"]
+    random_state = cfg["split"]["random_state"]
+
+    # Model hyperparameters
+    max_iter = cfg["training"]["classification"]["max_iter"]
+    model_random_state = cfg["training"]["classification"]["random_state"]
 
     # Ensure folders exist
     for p in [clean_path, model_path, preds_path]:
@@ -71,7 +98,7 @@ def main():
     # -------------------------------------------------
 
     logger.info("STEP 2: Cleaning data")
-    df_clean = clean_data(df_raw, drop_na=True)
+    df_clean = clean_data(df_raw, drop_na=drop_na)
 
     df_clean.to_csv(clean_path, index=False)
     logger.info(f"Clean dataset saved to {clean_path}")
@@ -81,15 +108,6 @@ def main():
     # -------------------------------------------------
 
     logger.info("STEP 3: Validating dataset")
-
-    required_columns = [
-        "customerID",
-        "tenure",
-        "MonthlyCharges",
-        "TotalCharges",
-        "Churn"
-    ]
-
     validate_dataframe(df_clean, required_columns)
 
     # -------------------------------------------------
@@ -100,8 +118,8 @@ def main():
 
     df_eng = engineer_features(df_clean)
 
-    X = df_eng.drop(columns=["Churn"])
-    y = df_eng["Churn"].map({"No": 0, "Yes": 1})
+    X = df_eng.drop(columns=[target_column])
+    y = df_eng[target_column].map({"No": 0, "Yes": 1})
 
     # -------------------------------------------------
     # STEP 5: Train/Test Split
@@ -112,8 +130,8 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
-        test_size=0.30,
-        random_state=42
+        test_size=test_size,
+        random_state=random_state
     )
 
     # -------------------------------------------------
@@ -134,7 +152,9 @@ def main():
         X_train,
         y_train,
         preprocessor,
-        model_path=str(model_path)
+        model_path=str(model_path),
+        max_iter=max_iter,
+        random_state=model_random_state
     )
 
     # -------------------------------------------------
@@ -147,7 +167,7 @@ def main():
         pipeline,
         X_test,
         y_test,
-        problem_type="classification"
+        problem_type=problem_type
     )
 
     logger.info(f"Evaluation metric value: {metric_value:.4f}")

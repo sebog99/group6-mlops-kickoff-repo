@@ -1,10 +1,37 @@
 # MLOps Project Configuration
-# This file will eventually control paths, hyperparameters, and toggles.
+# Single source of truth for non-secret runtime settings.
+# Secrets belong in .env only, NOT HERE!
 
-data:
-  raw: "data/raw/dataset.csv"
-  processed: "data/processed/clean.csv"
+paths:
+  raw_data: "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
+  processed_data: "data/processed/clean.csv"
+  model_artifact: "models/model.joblib"
+  predictions_artifact: "reports/predictions.csv"
+  log_file: "logs/pipeline.log"
 
-train:
-  test_size: 0.2
-  seed: 42
+logging:
+  level: "INFO"   # "DEBUG", "INFO", "WARNING", "ERROR"
+  format: "text"
+
+problem:
+  target_column: "Churn"
+  problem_type: "classification"   # "classification" or "regression"
+  identifier_column: "customerID"
+
+split:
+  test_size: 0.30
+  random_state: 42
+
+training:
+  classification:
+    max_iter: 2000
+    random_state: 42
+
+validation:
+  drop_na: true
+  required_columns:
+    - "customerID"
+    - "tenure"
+    - "MonthlyCharges"
+    - "TotalCharges"
+    - "Churn"
