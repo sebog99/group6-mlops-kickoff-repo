@@ -61,3 +61,4 @@ logs/
 # Reference / scratch files
 # -----------------------------
 newconfig.yaml
+basemain.py
