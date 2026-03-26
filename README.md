@@ -70,7 +70,7 @@ This project follows a strict separation between "Sandbox" (Notebooks) and "Prod
 │   └── main.py               # Pipeline orchestrator (entry point)
 
 ├── data/                     # Data storage (not tracked in Git)
-│   ├── raw/                  # Original, immutable raw data
+│   ├── raw/                  # Original, immutable raw data (place raw dataset here)
 │   ├── processed/            # Cleaned and transformed datasets
 │   └── inference/            # Data used for prediction/inference
 
@@ -110,6 +110,21 @@ All runtime settings are controlled through `config.yaml`. No values are hardcod
 ---
 
 ## 6. Execution Model
+
+### Step 0: Add the Raw Data
+
+Before running the pipeline, you must manually place the dataset in the correct location.
+1. Download the Telco Customer Churn dataset (CSV format)
+2. Create the folder if it does not exist:
+```
+data/raw/
+```
+3. Place the dataset inside this folder with the following name:
+```
+data/raw/telco_chirn.csv
+```
+
+If the dataset is missing or incorrectly placed, the pipeline will fail during data loading stage.
 
 ### Step 1: Environment Setup
 
