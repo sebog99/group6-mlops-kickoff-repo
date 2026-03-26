@@ -1,11 +1,12 @@
 name: mlops_project
 channels:
   - conda-forge
-  - defaults
+  - default
+
 dependencies:
   - python=3.10
   - numpy
-  - pandas>=2
+  - pandas
   - matplotlib
   - scikit-learn
   - openpyxl
