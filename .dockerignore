@@ -1,0 +1,29 @@
+# Version control
+.git
+.gitignore
+
+# Secrets
+.env
+
+# Runtime artifacts (mounted as volumes)
+data/
+models/
+reports/
+logs/
+wandb/
+
+# Notebooks
+notebooks/
+
+# Reference / scratch files
+newconfig.yaml
+basemain.py
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# OS
+.DS_Store
