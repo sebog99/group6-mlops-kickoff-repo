@@ -153,7 +153,6 @@ def _convert_tenure(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-
 def clean_data(df: pd.DataFrame, drop_na: bool = True) -> pd.DataFrame:
     """
     Main cleaning pipeline.
@@ -180,8 +179,7 @@ def clean_data(df: pd.DataFrame, drop_na: bool = True) -> pd.DataFrame:
     df = _convert_total_charges(df)
     df = _convert_tenure(df)
 
-
-    # 4. Handle missing values
+    # 3. Handle missing values
     if drop_na:
         before = df.shape[0]
         df = df.dropna().reset_index(drop=True)

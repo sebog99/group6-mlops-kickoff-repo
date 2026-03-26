@@ -27,7 +27,8 @@ def test_main_pipeline_runs(tmp_path):
          patch("src.main.get_preprocessor"), \
          patch("src.main.train_model"), \
          patch("src.main.evaluate_model", return_value=0.85), \
-         patch("src.main.run_inference", return_value=predictions):
+         patch("src.main.run_inference", return_value=predictions), \
+         patch("src.main._wandb_is_enabled", return_value=False):
 
         # Run pipeline
         main()

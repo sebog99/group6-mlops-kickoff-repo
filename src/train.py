@@ -20,13 +20,13 @@ logging.basicConfig(
 )
 
 
-def train_model(X_train: pd.DataFrame, y_train: pd.Series, preprocessor, model_path: str = "models/model.joblib"):
+def train_model(X_train: pd.DataFrame, y_train: pd.Series, preprocessor, model_path: str = "models/model.joblib", max_iter: int = 2000, random_state: int = 42):
     """
     Fits a machine learning pipeline and saves the resulting artifact.
 
-    Why a Pipeline? 
-    It encapsulates the preprocessing steps and the estimator into a single object. 
-    This prevents 'data leakage' during training and ensures that inference data 
+    Why a Pipeline?
+    It encapsulates the preprocessing steps and the estimator into a single object.
+    This prevents 'data leakage' during training and ensures that inference data
     undergoes the exact same transformations[cite: 5, 30].
 
     Args:
@@ -34,6 +34,8 @@ def train_model(X_train: pd.DataFrame, y_train: pd.Series, preprocessor, model_p
         y_train (pd.Series): Training target (Churn).
         preprocessor: An unfitted scikit-learn ColumnTransformer.
         model_path (str): File path to save the trained model.
+        max_iter (int): Maximum iterations for LogisticRegression convergence.
+        random_state (int): Random seed for reproducibility.
 
     Returns:
         Pipeline: The fully fitted scikit-learn Pipeline.
@@ -41,9 +43,7 @@ def train_model(X_train: pd.DataFrame, y_train: pd.Series, preprocessor, model_p
 
     logging.info("Initializing the ML Pipeline...")
 
-    # Parameters derived from the 'New Final.ipynb' experiment
-    # max_iter=2000 is used to ensure convergence on the scaled Telco dataset.
-    estimator = LogisticRegression(max_iter=2000, random_state=42)
+    estimator = LogisticRegression(max_iter=max_iter, random_state=random_state)
 
     # Creating the pipeline
     pipeline = Pipeline([
