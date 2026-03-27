@@ -41,9 +41,9 @@ wandb:
   project: "telco-churn"
   name: "baseline-logistic-regression"
   job_type: "training"
-  group: "baseline"
+  group: "prod"
   notes: "Baseline logistic regression on Telco churn dataset"
-  tags: ["baseline", "logreg"]
+  tags: ["prod", "baseline", "logreg"]
   model_artifact_name: "telco_churn_model"
   log_predictions: true
   log_auc_plots: true
