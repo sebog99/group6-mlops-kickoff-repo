@@ -4,10 +4,10 @@ from typing import List
 import pandas as pd
 import joblib
 
-from src.clean_data import clean_data
-from src.validate import validate_dataframe
-from src.features import engineer_features
-from src.infer import run_inference
+from .clean_data import clean_data
+from .validate import validate_dataframe
+from .features import engineer_features
+from .infer import run_inference
 
 app = FastAPI(title="Churn API")
 

@@ -25,6 +25,13 @@ COPY conftest.py .
 RUN mkdir -p data/raw data/processed data/inference models reports logs
 
 # -------------------------------------------------------
-# Run the pipeline inside the conda environment
+# Expose API port
+# -------------------------------------------------------
+EXPOSE 8000
+
+# -------------------------------------------------------
+# Default: run the training pipeline
+# Override with CMD to run the API instead:
+#   docker run ... telco-churn:latest conda run -n mlops_project uvicorn src.api:app --host 0.0.0.0 --port 8000
 # -------------------------------------------------------
 ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "mlops_project", "python", "-m", "src.main"]
