@@ -12,6 +12,8 @@ dependencies:
   - pyyaml
   - python-dotenv
   - wandb
+  - fastapi
+  - uvicorn
   - pytest
   - pytest-cov
   - black
