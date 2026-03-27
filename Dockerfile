@@ -6,10 +6,13 @@ FROM continuumio/miniconda3:latest
 WORKDIR /app
 
 # -------------------------------------------------------
-# Install dependencies from environment.yml
+# Install dependencies from conda-lock.yml (pinned, reproducible)
 # -------------------------------------------------------
 COPY environment.yml .
-RUN conda env create -f environment.yml && conda clean -afy
+COPY conda-lock.yml .
+RUN conda install -n base -c conda-forge conda-lock -y && \
+    conda-lock install -n mlops_project conda-lock.yml && \
+    conda clean -afy
 
 # -------------------------------------------------------
 # Copy source code and configuration
