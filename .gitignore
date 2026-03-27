@@ -62,6 +62,8 @@ logs/
 # -----------------------------
 newconfig.yaml
 basemain.py
+PROJECT_SUMMARY.md
+run_pipeline.sh
 
 # -----------------------------
 # W&B (IMPORTANT FIX)
