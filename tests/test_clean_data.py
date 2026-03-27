@@ -9,6 +9,7 @@ SAMPLE = {
     "Churn": ["No", "Yes", "No", "No"]
 }
 
+
 def test_load_and_clean_happy_path(tmp_path):
     df = pd.DataFrame(SAMPLE)
     raw_file = tmp_path / "raw.csv"
@@ -18,6 +19,7 @@ def test_load_and_clean_happy_path(tmp_path):
     df_clean = clean_data(df_loaded, drop_na=True)
     assert df_clean.shape[0] == 3
     assert "TotalCharges" in df_clean.columns
+
 
 def test_total_charges_becomes_numeric_after_cleaning():
     df = pd.DataFrame({
@@ -29,6 +31,7 @@ def test_total_charges_becomes_numeric_after_cleaning():
     })
     df_clean = clean_data(df, drop_na=False)
     assert pd.api.types.is_numeric_dtype(df_clean["TotalCharges"])
+
 
 def test_save_and_validate(tmp_path):
     df = pd.DataFrame(SAMPLE).drop_duplicates()
