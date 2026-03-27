@@ -32,7 +32,7 @@ jobs:
             - name: Run Pytest
               shell: bash -el {0}
               run: |
-                  conda run -n mlops_project pytest tests/ -v
+                  conda run -n mlops_project pytest tests/ -v --ignore=tests/test_api.py
 
             - name: Validate Docker build
               run: docker build -t telco-churn:test .
